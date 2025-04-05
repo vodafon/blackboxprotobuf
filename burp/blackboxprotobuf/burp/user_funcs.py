@@ -54,7 +54,7 @@ applications.
 #                                          IParameter.PARAM_URL))
 
 
-def detect_protobuf(content, is_request, content_info, helpers):
+def detect_protobuf(content, is_request, info, helpers):
     """Customize protobuf detection with a request or a response. Should return True if it is a protobuf,
     False if it definitely not a protobuf and should not try to decode, or None
     to fallback to the standard content-type header detection.
@@ -63,7 +63,26 @@ def detect_protobuf(content, is_request, content_info, helpers):
     customer application functionality. You can also use "return True" to try
     to decode every request/response.
     """
-    pass
+    protobuf_content_types = [
+            "protobuf",
+            "grpc",
+            ]
+
+    for header in info.getHeaders():
+        header_lower = header.lower()
+
+        # Check content-type header
+        if "content-type" in header_lower:
+            for protobuf_content_type in protobuf_content_types:
+                if protobuf_content_type in header_lower:
+                    return True
+
+        # Check custom x-codec-format header
+        if "x-codec-format" in header_lower:
+            if "protocolbuffers" in header_lower:
+                return True
+
+    return False
 
 
 def get_protobuf_data(
